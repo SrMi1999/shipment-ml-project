@@ -39,7 +39,9 @@ X_train, X_temp, y_train, y_temp = train_test_split(
 
 # Split the temporary part equally into validation and test data.
 X_val, X_test, y_val, y_test = train_test_split(
-    X_temp, y_temp, test_size=0.5, random_state=42
+    X_temp, y_temp, 
+    test_size=0.5, 
+    random_state=42
 )
 
 # Fit the scaler on training data only, then use it to transform train and test.
@@ -63,9 +65,7 @@ checks.to_csv("outputs/part_b_checks.csv", index=False)
 
 # Baseline: predict the training target mean for every validation shipment.
 baseline_prediction = np.full(len(y_val), y_train.mean())
-baseline_mae, baseline_mse, baseline_rmse, baseline_r2 = calculate_metrics(
-    y_val, baseline_prediction
-)
+baseline_mae, baseline_mse, baseline_rmse, baseline_r2 = calculate_metrics(y_val, baseline_prediction)
 
 metric_rows = []
 metric_rows.append({
@@ -184,9 +184,7 @@ for learning_rate in [0.01, 0.1, 1.0]:
         "val_r2": gb_r2,
     })
 
-pd.DataFrame(learning_rate_rows).round(4).to_csv(
-    "outputs/part_b_gb_learning_rate.csv", index=False
-)
+pd.DataFrame(learning_rate_rows).round(4).to_csv("outputs/part_b_gb_learning_rate.csv", index=False)
 
 
 # Rank the four candidates by validation RMSE and select the best two for CV.
@@ -240,11 +238,8 @@ metric_rows.append({
 })
 
 # Save the baseline, four validation results and one final test result.
-metrics = pd.DataFrame(metric_rows, columns=[
-    "model", "split", "MAE", "MSE", "RMSE", "R2"
-])
+metrics = pd.DataFrame(metric_rows, columns=["model", "split", "MAE", "MSE", "RMSE", "R2"])
 metrics.round(4).to_csv("outputs/part_b_metrics.csv", index=False)
-
 
 # Print a short summary so the main checks are easy to see in PowerShell.
 print("Train rows:", len(X_train))

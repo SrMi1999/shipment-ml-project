@@ -1,5 +1,0 @@
-model,TN,FP,FN,TP,accuracy,precision,recall,f1
-blind_all_ontime,,,,,,,,
-logistic_regression,,,,,,,,
-decision_tree_depth_6,,,,,,,,
-random_forest_default,,,,,,,,

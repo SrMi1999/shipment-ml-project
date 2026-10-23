@@ -89,5 +89,100 @@ The cross-validation ranking therefore favoured Gradient Boosting, while the sin
 
 
 
+Part C — Classification: Predicting Delayed Shipments-
+
+ What I have to find out- In Part B, I predicted the delivery time of a shipment in hours. In Part C, I wanted to solve a different problem: whether a shipment would be delayed or not.
+
+For this part, I treated is_delayed as the target variable:0 means the shipment was delivered within the promised time.
+
+                                                           1 means the shipment took longer than the promised time
+
+I have to compare different classification models, understand which features were useful, check whether the bookkeeping columns affected the model, and choose a probability threshold that could identify delayed shipments without missing too many of them.  
+
+1. Train, validation and test split- I used a stratified split so that the proportion of delayed and non-delayed shipments was maintained as closely as possible in each dataset.
+I used the training data to fit the models, the validation data to compare them and select the threshold, and the test data for the final evaluation.
+I kept the test set separate during model selection so that I could use it to check how the final model performed on unseen data.
+
+2. Comparing the classification models-
+I started by comparing the required models on the validation set. I also included a simple baseline that predicted every shipment as not delayed.
+The blind baseline achieved 76.67% accuracy. At first, this looked reasonably high, but it predicted every shipment as on time. It failed to identify all 42 delayed shipments in the validation set.
+
+This showed me why accuracy alone can be misleading when the objective is to identify delayed shipments. A model can achieve high accuracy while failing to detect the class that matters most.
+
+Logistic Regression achieved an F1-score of 0.8046, while the Decision Tree with depth 6 achieved 0.7470. The default Random Forest achieved 0.7848.
+
+Based on these results, I could see that the models were learning useful patterns, but I still needed to investigate the features and test whether selecting fewer features could improve the Random Forest.
+
+3. Feature importance and the bookkeeping columns-
+I calculated the F-scores using SelectKBest(f_classif) and calculated feature importance using a Random Forest trained on the training data.
+
+Distance was the strongest individual feature according to the F-score. Hub tier, hub capacity and the number of stops also showed strong relationships with the delay target in this dataset.
+
+These scores measure how strongly an individual feature is associated with the target. They do not prove that the feature causes a delay, and they do not measure the contribution of the complete feature set.
+
+I also checked the five bookkeeping columns: label_print_batch, scanner_build_no, tape_roll_no, sticker_serial_mod and shelf_slot_no.
+All five ranked outside the top seven by F-score, and each had an F-score below 10. However, their combined Random Forest importance was 0.2244, or 22.44%.
+
+his was an important observation. Although these columns did not rank among the strongest individual features by F-score, the Random Forest still assigned them some combined importance. I therefore did not assume that their influence was zero just because their F-scores were low.
+
+4. Selecting the number of features- Next, I compared Random Forest models using different values of k with SelectKBest.
+The model using five features performed worse than the models using seven or ten features. The displayed results for seven and ten features were both 0.8140.
+
+Since the required final model uses seven selected features, I proceeded with k=7. This also allowed me to compare the tuned models and the default Random Forest using the same selected feature set.
+
+5. Grid Search, Randomized Search and the default Random Forest- I compared three candidates using the seven selected features.For Grid Search, I tested 27 parameter combinations with five-fold cross-validation, resulting in 135 fits. For Randomized Search, I tested nine candidates with five-fold cross-validation, resulting in 45 fits.Grid Search achieved a slightly higher cross-validation accuracy than Randomized Search. However, its validation F1-score was lower.
+
+
+This difference helped me understand that the best cross-validation accuracy does not necessarily mean the highest validation F1-score. The searches used the default classifier scoring of accuracy, whereas I used F1-score to compare the candidates on the separate validation set.
+
+The default Random Forest achieved the highest validation F1-score of 0.8140. Therefore, I selected default_forest_same_7_features as the final candidate.
+
+The validation set contained only 180 shipments, so I treated the differences between these scores cautiously. They were useful for model selection, but they were not enough to prove that one configuration would always perform better on other data.
+
+6. Choosing the alert threshold- The model produces a probability for each shipment. I tested thresholds from 0.1 to 0.9, classifying a shipment as delayed when its predicted probability was greater than or equal to the selected threshold.
+My main operational requirement was to maintain validation recall of at least 0.80. I therefore selected the highest tested threshold that satisfied that condition.
+
+At threshold 0.4, the model detected more delayed shipments, but it also generated more false alerts. At threshold 0.6, precision increased, but recall fell below the required 0.80.
+
+Threshold 0.5 was the highest tested threshold that maintained the required validation recall. I therefore selected 0.5 as the final alert threshold, even though the displayed F1-score at 0.6 was slightly higher.
+
+The model identified 35 of the 42 delayed validation shipments and missed seven. It also flagged nine shipments that were not actually delayed.
+For this project, I preferred maintaining the required recall rather than choosing a higher threshold that would miss more delayed shipments.
+
+7. Final test evaluation- After selecting the model and threshold using the training and validation process, I evaluated the final model on the held-out test set.
+
+The final configuration was:  Feature selection: SelectKBest with k=7
+                              Model: Random Forest
+                              Number of trees: 100
+                              Maximum depth: Unlimited
+                              Minimum samples per leaf: 1
+                              Alert threshold: 0.5
+
+The final model correctly identified 31 of the 41 delayed test shipments, while missing ten. It also generated 14 false alerts.
+The test F1-score was 0.7209, which was lower than the validation F1-score of 0.8140. Precision and recall also decreased on the test set.
+I did not treat this difference as proof that the model had failed. The test set was separate from the validation set, and its results provide a more realistic check of how the selected configuration performed on unseen shipments. However, the difference does show that validation performance should not be treated as a guarantee of test performance.
+
+The test set contained only 41 delayed shipments, so the recall estimate is sensitive to a small number of predictions. For example, each additional delayed shipment correctly identified or missed changes test recall by approximately 2.44 percentage points.
+
+
+8. What I learned from Part C- This part helped me understand that classification is not only about getting a high accuracy score. The blind baseline had 76.67% accuracy but did not identify any delayed shipments. Feature selection helped me compare smaller feature sets, and the tuning experiments showed that higher cross-validation accuracy does not automatically produce a higher validation F1-score.
+
+I also learned that the threshold should be selected according to the practical requirement. In this case, maintaining recall of at least 0.80 on the validation set led me to choose the threshold of 0.5 instead of 0.6.
+
+Finally, the lower test F1-score reminded me that model performance can change on unseen data. A useful next step would be to evaluate the model on a larger set of real shipment records and monitor its precision, recall and false-alert rate over time.
+
+The detailed classification results are saved in the following files:
+
+outputs/part_c_models.csv
+outputs/part_c_feature_scores.csv
+outputs/part_c_selectk.csv
+outputs/part_c_tuning.csv
+outputs/part_c_thresholds.csv
+outputs/part_c_final_test.csv
+outputs/part_c_final_config.csv
+
+
+
+
 
 

@@ -34,12 +34,15 @@ Delhivery - Capstone project-
    The delay rate increased across the distance bands. It was 2.19% for shipments up to 200 km and 85.23% for the 601+ km group. The last group contains only 88 shipments, so I would keep its smaller sample size in mind when interpreting the rate. I used the distance bands specified in the assignment so that the group results are consistent and reproducible.
 
    Correlation findings-
-    I generated the full numeric correlation matrix and saved it to outputs/part_a_correlations.csv. To write this finding, I ranked the correlations with delivery_hours by their absolute values and excluded delivery_hours itself from the ranking.
+
+   I generated the full numeric correlation matrix and saved it to outputs/part_a_correlations.csv. To write this finding, I ranked the correlations with delivery_hours by their absolute values and excluded delivery_hours itself from the ranking.
    The three strongest correlations were:
     Feature	Correlation  with delivery_hours
     promised_hours	-     +0.8372
     distance_km 	-     +0.4013
     n_stops 	     -    +0.3247
+
+
 
 
     promised_hours had the strongest positive correlation with delivery duration, followed by distance and the number of stops. The direction of these correlations means that higher values tended to occur alongside higher delivery hours in this dataset. Correlation shows association, not cause and effect, so I would not use these numbers alone to conclude that changing one feature would directly change delivery time.
@@ -54,11 +57,15 @@ Delhivery - Capstone project-
     Current conclusion
     Part A gives me a clean modelling table and an initial picture of where delays are more common in the generated data. The main patterns I found are the higher delay rate for Express shipments, the increasing delay rate across hub tiers, and the strong increase in delay rate for longer-distance shipments. These are useful findings to carry into the next parts, where the focus can move from describing the data to building and evaluating a model.
 
+
+
 How to run Part A-
 From the project root, after setting up the Python environment from requirements.txt, run:
 
 python generate_data.py
 python part_a_clean_eda.py
+
+
 
 
 

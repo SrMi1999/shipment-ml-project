@@ -309,7 +309,7 @@ Overall, this project helped me build a complete workflow from data cleaning and
 
 used Python with the package versions listed in requirements.txt.
 
-From the project folder, create and activate a virtual environment:
+ ### From the project folder, create and activate a virtual environment:
 
    python -m venv .venv
   .\.venv\Scripts\Activate.ps1

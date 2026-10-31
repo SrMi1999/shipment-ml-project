@@ -2,55 +2,55 @@
 ## 1. Project Overview
 
   ## 2. Part A – Data Cleaning
-   I started Part A by trying to understand the shipment data before moving on to machine learning. My first goal was to make the data consistent, create the features required by the assignment, and check whether the shipment information showed any patterns related to delivery time and delays.
+  I started Part A by trying to understand the shipment data before moving on to machine learning. My first goal was to make the data consistent, create the features required by the assignment, and check whether the shipment information showed any patterns related to delivery time and delays.
 
-   I used the assignment's data generator and treated the generated records as the project dataset. The results in this README describe this dataset only; they are not actual Delhivery operational statistics.
+  I used the assignment's data generator and treated the generated records as the project dataset. The results in this README describe this dataset only; they are not actual Delhivery operational statistics.
 
    ### 2.1 What I Did
-    I loaded the shipment data and the hub details from the data folder. Before filling or changing values, I checked the row count, exact duplicates, missing values, inconsistent service-type spellings, missing payment modes, and parcel weights that looked invalid.
+   I loaded the shipment data and the hub details from the data folder. Before filling or changing values, I checked the row count, exact duplicates, missing values, inconsistent service-type spellings, missing payment modes, and parcel weights that looked invalid.
 
-    I removed exact duplicate rows first. The raw file had 1,224 rows, and 24 of them were exact duplicates, leaving 1,200 shipment rows. I used the deduplicated data for the cleaning checks so that repeated rows would not inflate the counts.
+   I removed exact duplicate rows first. The raw file had 1,224 rows, and 24 of them were exact duplicates, leaving 1,200 shipment rows. I used the deduplicated data for the cleaning checks so that repeated rows would not inflate the counts.
 
-    Next, I cleaned service_type by stripping extra spaces and converting the names to title case. This reduced the number of distinct spellings from 12 to 3. I filled missing payment_mode values with the exact placeholder Unknown rather than guessing which payment method was used.
+   Next, I cleaned service_type by stripping extra spaces and converting the names to title case. This reduced the number of distinct spellings from 12 to 3. I filled missing payment_mode values with the exact placeholder Unknown rather than guessing which payment method was used.
 
-    The declared_value field was stored as text and included rupee symbols and comma separators. I removed those characters, converted the values to numbers, and stored the result in declared_value_inr. I converted dispatch_time to datetime as well, so I could derive the dispatch hour and weekend flag from it.
+   The declared_value field was stored as text and included rupee symbols and comma separators. I removed those characters, converted the values to numbers, and stored the result in declared_value_inr. I converted dispatch_time to datetime as well, so I could derive the dispatch hour and weekend flag from it.
 
-    The assignment identifies parcel weights above 100 kg as scanner-fault values. I treated those 5 values as missing instead of allowing them to affect the weight statistics. I then filled missing distance_km, parcel_weight_kg, and declared_value_inr values with their medians. The medians used were 314.95 km, 1.83 kg, and INR 1,121.50. I returned these median values in a dictionary because the same cleaning logic may need to be applied to new shipments later.
+   The assignment identifies parcel weights above 100 kg as scanner-fault values. I treated those 5 values as missing instead of allowing them to affect the weight statistics. I then filled missing distance_km, parcel_weight_kg, and declared_value_inr values with their medians. The medians used were 314.95 km, 1.83 kg, and INR 1,121.50. I returned these median values in a dictionary because the same cleaning logic may need to be applied to new shipments later.
 
-    After cleaning, I joined the hub information to the shipment data with a left merge on hub_id. The merge kept all 1,200 shipment rows. I created the features listed in the assignment, including promised_hours, is_cod, is_weekend, dispatch_hour, and log_declared_value.
+   After cleaning, I joined the hub information to the shipment data with a left merge on hub_id. The merge kept all 1,200 shipment rows. I created the features listed in the assignment, including promised_hours, is_cod, is_weekend, dispatch_hour, and log_declared_value.
 
-    Finally, I created the target is_delayed. A shipment is marked as delayed- 1 when delivery_hours is greater than promised_hours; otherwise, it is marked as not delayed (0). I kept delivery_hours as the outcome used for analysis, not as one of the 17 model features.
+   Finally, I created the target is_delayed. A shipment is marked as delayed- 1 when delivery_hours is greater than promised_hours; otherwise, it is marked as not delayed (0). I kept delivery_hours as the outcome used for analysis, not as one of the 17 model features.
 
-    You can see the out put from outputs/part_a_checks.csv.
+   You can see the out put from outputs/part_a_checks.csv.
 
-    The checks helped me confirm that the row count stayed consistent after the hub merge and that the required feature and outcome columns were complete after cleaning. The missing-value counts above are taken before imputation, after duplicate removal. The five invalid weights are counted separately from the weights that were already missing.
+   The checks helped me confirm that the row count stayed consistent after the hub merge and that the required feature and outcome columns were complete after cleaning. The missing-value counts above are taken before imputation, after duplicate removal. The five invalid weights are counted separately from the weights that were already missing.
 
    ### 2.2 What I Observed from the Delay Results
    
-    There were 278 delayed shipments out of 1,200, which gives an overall delay rate of 23.17% in this generated dataset. I then compared delay rates by service type, hub tier, and distance band instead of relying only on the overall rate.
+   There were 278 delayed shipments out of 1,200, which gives an overall delay rate of 23.17% in this generated dataset. I then compared delay rates by service type, hub tier, and distance band instead of relying only on the overall rate.
 
-    Express had the highest delay rate: 119 out of 243 Express shipments were delayed. Economy had the lowest rate at 8.57%, while Standard was at 20.56%. I found this worth checking because Express has a shorter promised delivery time of 36 hours, so a shipment can be classified as delayed even when its absolute delivery time is lower than the mean for Economy. The delay label depends on the service promise, not only on the number of delivery hours.
+   Express had the highest delay rate: 119 out of 243 Express shipments were delayed. Economy had the lowest rate at 8.57%, while Standard was at 20.56%. I found this worth checking because Express has a shorter promised delivery time of 36 hours, so a shipment can be classified as delayed even when its absolute delivery time is lower than the mean for Economy. The delay label depends on the service promise, not only on the number of delivery hours.
 
-    The delay rate increased from 4.00% for Tier 1 hubs to 21.50% for Tier 2 and 44.00% for Tier 3. In this dataset, Tier 3 had eleven times the delay rate of Tier 1. This is a strong pattern to investigate in later parts of the project, but this comparison alone does not prove that hub tier causes delays.
+   The delay rate increased from 4.00% for Tier 1 hubs to 21.50% for Tier 2 and 44.00% for Tier 3. In this dataset, Tier 3 had eleven times the delay rate of Tier 1. This is a strong pattern to investigate in later parts of the project, but this comparison alone does not prove that hub tier causes delays.
 
-    The delay rate increased across the distance bands. It was 2.19% for shipments up to 200 km and 85.23% for the 601+ km group. The last group contains only 88 shipments, so I would keep its smaller sample size in mind when interpreting the rate. I used the distance bands specified in the assignment so that the group results are consistent and reproducible.
+   The delay rate increased across the distance bands. It was 2.19% for shipments up to 200 km and 85.23% for the 601+ km group. The last group contains only 88 shipments, so I would keep its smaller sample size in mind when interpreting the rate. I used the distance bands specified in the assignment so that the group results are consistent and reproducible.
 
    ### 2.3 Correlation Findings
 
-    I generated the full numeric correlation matrix and saved it to outputs/part_a_correlations.csv. To write this finding, I ranked the correlations with delivery_hours by their absolute values and excluded delivery_hours itself from the ranking.
+   I generated the full numeric correlation matrix and saved it to outputs/part_a_correlations.csv. To write this finding, I ranked the correlations with delivery_hours by their absolute values and excluded delivery_hours itself from the ranking.
    
-    promised_hours had the strongest positive correlation with delivery duration, followed by distance and the number of stops. The direction of these correlations means that higher values tended to occur alongside higher delivery hours in this dataset. Correlation shows association, not cause and effect, so I would not use these numbers alone to conclude that changing one feature would directly change delivery time.
+   promised_hours had the strongest positive correlation with delivery duration, followed by distance and the number of stops. The direction of these correlations means that higher values tended to occur alongside higher delivery hours in this dataset. Correlation shows association, not cause and effect, so I would not use these numbers alone to conclude that changing one feature would directly change delivery time.
 
    ### 2.4 Checks and Improvements I Made While Preparing Part A
 
-    While reviewing the pipeline, I focused on making the checks reflect what the script actually does instead of only printing values that looked reasonable. I made sure that duplicate rows were removed before the “before filling” missing-value counts were calculated. I also kept invalid weights separate from values that were already missing, so those two checks would not be mixed together.
+   While reviewing the pipeline, I focused on making the checks reflect what the script actually does instead of only printing values that looked reasonable. I made sure that duplicate rows were removed before the “before filling” missing-value counts were calculated. I also kept invalid weights separate from values that were already missing, so those two checks would not be mixed together.
 
-    I checked that missing payment modes use the required Unknown spelling, that the delay target is represented as integer values (0 and 1), and that the null check includes all 17 features, delivery_hours, and is_delayed. I also made the delay evidence output include both counts and mean_hours, and used the assignment's required distance bands. For correlations, I saved the complete numeric matrix rather than only a few selected feature pairs. These checks make the outputs easier to verify and reuse in the next parts of the project.
+   I checked that missing payment modes use the required Unknown spelling, that the delay target is represented as integer values (0 and 1), and that the null check includes all 17 features, delivery_hours, and is_delayed. I also made the delay evidence output include both counts and mean_hours, and used the assignment's required distance bands. For correlations, I saved the complete numeric matrix rather than only a few selected feature pairs. These checks make the outputs easier to verify and reuse in the next parts of the project.
 
 
    ### 2.5 Current Conclusion
   
-    Part A gives me a clean modelling table and an initial picture of where delays are more common in the generated data. The main patterns I found are the higher delay rate for Express shipments, the increasing delay rate across hub tiers, and the strong increase in delay rate for longer-distance shipments. These are useful findings to carry into the next parts, where the focus can move from describing the data to building and evaluating a model.
+   Part A gives me a clean modelling table and an initial picture of where delays are more common in the generated data. The main patterns I found are the higher delay rate for Express shipments, the increasing delay rate across hub tiers, and the strong increase in delay rate for longer-distance shipments. These are useful findings to carry into the next parts, where the focus can move from describing the data to building and evaluating a model.
 
 
 

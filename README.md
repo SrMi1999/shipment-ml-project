@@ -262,11 +262,16 @@ Before using this workflow in a real delivery operation, I would connect it to r
 
 ### I would focus on these areas:
 
-Accuracy: Track test and future production precision, recall, F1-score, RMSE, and R².
-Reliability: Keep the data checks and prediction validation used in Parts A and D.
-Reproducibility: Keep fixed random states, pinned package versions, and repeatable scripts.
-Maintainability: Reuse the shared cleaning and feature-building functions in src/shipment_prep.py.
-Consistency: Load the saved feature order, imputation values, model, and threshold together.
+#### Accuracy: 
+Track test and future production precision, recall, F1-score, RMSE, and R².
+#### Reliability: 
+Keep the data checks and prediction validation used in Parts A and D.
+#### Reproducibility:
+ Keep fixed random states, pinned package versions, and repeatable scripts.
+#### Maintainability:
+ Reuse the shared cleaning and feature-building functions in src/shipment_prep.py.
+#### Consistency: 
+Load the saved feature order, imputation values, model, and threshold together.
 Monitorability: Track hub delay rates, segment changes, flagged shipment rates, and prediction outcomes.
 
 I would initially monitor these operational indicators weekly. The following are proposed warning triggers, not results observed in this project:

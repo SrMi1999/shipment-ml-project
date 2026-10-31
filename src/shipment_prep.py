@@ -22,17 +22,9 @@ def clean_shipments(raw, medians=None):
 
     clean_df["service_type"] = clean_df["service_type"].str.strip().str.title()
     clean_df["payment_mode"] = clean_df["payment_mode"].fillna("Unknown")
-
-    clean_df["declared_value"] = (
-        clean_df["declared_value"].astype(str)
-        .str.replace("₹", "", regex=False)
-        .str.replace(",", "", regex=False)
-        .str.strip()
-    )
-    clean_df["declared_value_inr"] = pd.to_numeric(
-        clean_df["declared_value"], errors="coerce"
-    )
-    clean_df = clean_df.drop(columns=["declared_value"])
+    clean_df["declared_value"] = (clean_df["declared_value"].astype(str).str.replace("₹", "", regex=False).str.replace(",", "", regex=False).str.strip())
+    clean_df["declared_value_inr"] = pd.to_numeric(clean_df["declared_value"], errors="coerce")
+    clean_df = clean_df.drop(columns=["declared_value"]) #beacuse we don't need this in clean_df anymore.
 
     clean_df["dispatch_time"] = pd.to_datetime(clean_df["dispatch_time"])
     clean_df["distance_km"] = pd.to_numeric(clean_df["distance_km"], errors="coerce")

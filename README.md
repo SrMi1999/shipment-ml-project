@@ -183,6 +183,129 @@ outputs/part_c_final_config.csv
 
 
 
+Part D – Hub Segmentation and Prediction
+Hub Segmentation-
+In Part D, I grouped shipments by hub_id and calculated the shipment count, average delivery hours, delay rate, average distance, and average number of stops.
+The resulting hub profile contained 24 hubs, with 50 shipments per hub.
+I scaled the four hub-level measurements and applied KMeans clustering with random_state=42 and n_init=10, I compared K values from 2 to 5 using the across-cluster distance divided by within-cluster distanc. Although K=4 and K=5 had higher separation ratios, they created smaller clusters. I selected K=3 as a more practical grouping for hub operations.
+I named the clusters using their average delay rates: Standard, Watch, Escalate as given
+
+Hub Tier Mismatches-
+I compared the KMeans segments with the expected tier mapping: Tier 1 – Standard, Tier 2 – Watch, and Tier 3 – Escalate.
+I found four mismatches
+These hubs are worth reviewing because their observed shipment patterns do not match the expected tier grouping.
+
+
+Model Packaging-
+I created package_model.py to rebuild the final Part C model using the selected configuration.
+
+I saved the trained model and its supporting files:
+models/delay_model.pkl
+models/delay_threshold.csv
+models/feature_order.csv
+models/impute_values.csv
+
+I then loaded the saved model again and compared its probabilities with the original model's probabilities on the test data.
+The maximum probability difference after reloading was 0.0, confirming that the saved model reproduced the original predictions in this run.
+
+Prediction on 48 New Shipments-
+Finally, I used predict_delay.py to process the 48 new shipments provided by the data generator.
+The script reused the cleaning and feature-building functions, loaded the saved model and threshold, and joined the hub segment information.
+A total of 48 new shipments were processed during the reporting period. Out of these, 40 shipments required no further action, as they proceeded without issue.
+However, the remaining items required specific operational interventions. A total of 8 shipments were flagged for review. This resulted in 6 escalations to the hub manager for resolution and prompted 2 proactive customer calls to address potential concerns.
+
+
+The action rules were:
+
+Flagged + Escalate segment: Escalate to hub manager
+
+Flagged + Standard or Watch segment: Proactive customer call
+
+Not flagged: No action
+
+I checked that all 48 shipment IDs were unique and that the output had no missing values. I also ran the prediction script twice. Both runs produced the same SHA256 hash:
+
+879EE4FBC04CEA318DB11BF9C1A1D447D9F6484ABF8248A3297CFFAAD835D7B6
+
+This confirmed that the prediction output was reproducible for the same input files and environment.
+
+
+The model was packaged using the scikit-learn version pinned in requirements.txt. If the local scikit-learn version is different, I recommend running package_model.py again before running predictions.
+
+Production Plan & Limitations-
+Production Plan-
+
+
+Before using this workflow in a real delivery operation, I would connect it to regularly updated shipment and hub data and validate it on real historical records.
+
+I would focus on these areas:
+
+Accuracy: Track test and future production precision, recall, F1-score, RMSE, and R².
+Reliability: Keep the data checks and prediction validation used in Parts A and D.
+Reproducibility: Keep fixed random states, pinned package versions, and repeatable scripts.
+Maintainability: Reuse the shared cleaning and feature-building functions in src/shipment_prep.py.
+Consistency: Load the saved feature order, imputation values, model, and threshold together.
+Monitorability: Track hub delay rates, segment changes, flagged shipment rates, and prediction outcomes.
+
+I would initially monitor these operational indicators weekly. The following are proposed warning triggers, not results observed in this project:
+
+Overall delay rate above 28%.
+Flagged shipment share above 25%.
+Recall on shipments with confirmed delivery outcomes below 75%.
+Missing required model inputs above 0%.
+I would review these indicators with operations teams and investigate unusual changes before changing the model.
+I would also review model performance every three months and retrain earlier if there is sustained data or performance drift.
+
+The assignment's generator includes a sale-event period from September 15 to September 28. I would monitor this period separately and compare it with previous sale-event periods rather than comparing it only with ordinary weeks. This helps distinguish expected seasonal changes from unusual operational problems.
+
+Data drift means that the incoming shipment data changes, while concept drift means that the relationship between shipment features and delivery delays changes. Both should be checked before deciding to retrain.
+
+Limitations
+
+The dataset is generated for the assignment and does not represent actual Delhivery operations.
+
+The classification test set contains only 41 delayed shipments, so a small number of prediction changes can affect the reported metrics.
+
+The classification threshold was selected using one validation split. It should be checked again using more historical data.
+
+The hub profiles contain 50 shipments per hub, which is a limited sample for making long-term operational decisions.
+
+The dataset may not include every real-world factor affecting delivery, such as unexpected route closures, staffing shortages, or local disruptions.
+
+Overall, this project helped me build a complete workflow from data cleaning and model training to hub-level analysis and actionable predictions for new shipments.
+
+
+
+
+
+
+
+How to Run-
+
+used Python with the package versions listed in requirements.txt.
+
+From the project folder, create and activate a virtual environment:
+
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+
+Install the required packages:
+
+pip install -r requirements.txt
+
+Run the scripts in this order:
+
+python generate_data.py
+python part_a_clean_eda.py
+python part_b_regression.py
+python part_c_classification.py
+python part_d_segments.py
+python package_model.py
+python predict_delay.py
+
+The scripts generate the datasets, analysis outputs, hub segments, saved model files, and new-shipment action report.
+
+
 
 
 
